@@ -1,18 +1,16 @@
 package regrid
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	r "github.com/dancannon/gorethink"
 )
 
 func (b *Bucket) Create(filename string, metadata map[string]interface{}) (*File, error) {
-	newFile := &File{
+	newFile := &FileInfo{
 		Filename:  filename,
 		ChunkSize: b.chunkSizeBytes,
 		StartedAt: time.Now(),
@@ -28,9 +26,7 @@ func (b *Bucket) Create(filename string, metadata map[string]interface{}) (*File
 	}
 
 	var rsp struct {
-		Changes []struct {
-			NewVal *File `gorethink:"new_val"`
-		}
+		Changes []FileInfoChange
 	}
 	if err := cur.One(&rsp); err != nil {
 		return nil, err
@@ -40,16 +36,15 @@ func (b *Bucket) Create(filename string, metadata map[string]interface{}) (*File
 		return nil, fmt.Errorf("Error opening file for writing")
 	}
 
-	file := rsp.Changes[0].NewVal
-	file.bucket = b
-	file.hash = sha256.New()
+	fileInfo := rsp.Changes[0].NewVal
+	fileInfo.bucket = b
 
-	return file, nil
+	return fileInfo.Open()
 }
 
 func (f *File) Write(b []byte) (n int, err error) {
 	if f == nil {
-		return 0, os.ErrInvalid
+		return 0, ErrInvalid
 	}
 	n, err = f.write(b)
 	if n < 0 {

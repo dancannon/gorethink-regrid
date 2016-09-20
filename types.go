@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	ErrInvalid          = errors.New("invalid argument")
+	ErrNotExist         = errors.New("file does not exist")
 	ErrRevisionNotExist = errors.New("revision does not exist")
 	ErrHashMismatch     = errors.New("sha256 hash mismatch")
 )
@@ -22,18 +24,8 @@ const (
 	StatusDeleted    Status = "Deleted"
 )
 
-type File struct {
-	// Internal fields used for both reading/writing
+type FileInfo struct {
 	bucket *Bucket
-	hash   hash.Hash
-
-	// Internal fields used for reading
-	cursor *r.Cursor
-	buf    []byte
-	opened bool
-
-	// Internal fields used for writing
-	num int
 
 	ID         string                 `gorethink:"id,omitempty"`
 	Filename   string                 `gorethink:"filename"`
@@ -45,6 +37,34 @@ type File struct {
 	DeletedAt  time.Time              `gorethink:"deletedAt"`
 	Sha256     string                 `gorethink:"sha256"`
 	Metadata   map[string]interface{} `gorethink:"metadata"`
+}
+
+func (fi *FileInfo) Open() (*File, error) {
+	f := &File{
+		FileInfo: fi,
+		bucket:   fi.bucket,
+	}
+	if err := f.open(); err != nil {
+		return nil, err
+	}
+
+	return f, nil
+}
+
+type File struct {
+	*FileInfo
+
+	// Internal fields used for both reading/writing
+	bucket *Bucket
+	hash   hash.Hash
+
+	// Internal fields used for reading
+	cursor *r.Cursor
+	buf    []byte
+	opened bool
+
+	// Internal fields used for writing
+	num int
 }
 
 func (f *File) Close() error {
@@ -60,4 +80,9 @@ type Chunk struct {
 	FileID string `gorethink:"file_id"`
 	Num    int    `gorethink:"num"`
 	Data   []byte `gorethink:"data"`
+}
+
+type FileInfoChange struct {
+	NewVal *FileInfo `gorethink:"new_val"`
+	OldVal *FileInfo `gorethink:"old_val"`
 }

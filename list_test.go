@@ -105,10 +105,14 @@ func TestList(t *testing.T) {
 		if assert.Len(t, files, 1) {
 			gridHash := sha256.New()
 
-			_, err = io.Copy(gridHash, files[0])
+			file, err := files[0].Open()
+			require.Nil(t, err)
+
+			_, err = io.Copy(gridHash, file)
+			assert.Nil(t, file.Close())
 
 			require.Nil(t, err)
-			assert.Equal(t, files[0].Sha256, hex.EncodeToString(gridHash.Sum(nil)))
+			assert.Equal(t, file.Sha256, hex.EncodeToString(gridHash.Sum(nil)))
 		}
 	})
 }

@@ -31,8 +31,10 @@ func TestBucketInit(t *testing.T) {
 }
 
 func testBucketInit(t *testing.T, bucket *Bucket) {
-	err := bucket.Init()
-	require.Nil(t, err)
+	// Run twice to ensure that all the checks work even if the tables and
+	// indexes already exist
+	require.Nil(t, bucket.Init())
+	require.Nil(t, bucket.Init())
 
 	cur, err := r.DB(db).TableList().Run(session)
 	require.Nil(t, err)

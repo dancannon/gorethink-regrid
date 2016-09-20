@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"os"
 
 	r "github.com/dancannon/gorethink"
 )
@@ -41,7 +40,7 @@ func (b *Bucket) OpenRevision(filename string, revision int) (*File, error) {
 	}
 
 	if len(files) == 0 {
-		return nil, os.ErrNotExist
+		return nil, ErrNotExist
 	}
 	if len(files) < (revSteps + 1) {
 		return nil, ErrRevisionNotExist
@@ -61,7 +60,7 @@ func (b *Bucket) OpenID(id string) (*File, error) {
 	}
 
 	if cur.IsNil() {
-		return nil, os.ErrNotExist
+		return nil, ErrNotExist
 	}
 
 	var file *File
@@ -76,7 +75,7 @@ func (b *Bucket) OpenID(id string) (*File, error) {
 
 func (f *File) Read(b []byte) (n int, err error) {
 	if f == nil || f.bucket == nil {
-		return 0, os.ErrInvalid
+		return 0, ErrInvalid
 	}
 	if !f.opened {
 		if err := f.open(); err != nil {

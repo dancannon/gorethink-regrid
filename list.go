@@ -2,7 +2,7 @@ package regrid
 
 import r "github.com/dancannon/gorethink"
 
-func (b *Bucket) ListRegex(pattern string, skip, limit int, reverse bool) ([]*File, error) {
+func (b *Bucket) ListRegex(pattern string, skip, limit int, reverse bool) ([]*FileInfo, error) {
 	query := r.DB(b.databaseName).Table(b.filesTable).Between(
 		[]interface{}{StatusComplete, r.MinVal},
 		[]interface{}{StatusComplete, r.MaxVal},
@@ -30,7 +30,7 @@ func (b *Bucket) ListRegex(pattern string, skip, limit int, reverse bool) ([]*Fi
 		return nil, err
 	}
 
-	var files []*File
+	var files []*FileInfo
 	if err := cursor.All(&files); err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (b *Bucket) ListRegex(pattern string, skip, limit int, reverse bool) ([]*Fi
 	return files, nil
 }
 
-func (b *Bucket) ListFilename(filename string, skip, limit int, reverse bool) ([]*File, error) {
+func (b *Bucket) ListFilename(filename string, skip, limit int, reverse bool) ([]*FileInfo, error) {
 	query := r.DB(b.databaseName).Table(b.filesTable).Between(
 		[]interface{}{StatusComplete, filename, r.MinVal},
 		[]interface{}{StatusComplete, filename, r.MaxVal},
@@ -68,7 +68,7 @@ func (b *Bucket) ListFilename(filename string, skip, limit int, reverse bool) ([
 		return nil, err
 	}
 
-	var files []*File
+	var files []*FileInfo
 	if err := cursor.All(&files); err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (b *Bucket) ListFilename(filename string, skip, limit int, reverse bool) ([
 	return files, nil
 }
 
-func (b *Bucket) ListMetadata(metadata map[string]interface{}, skip, limit int) ([]*File, error) {
+func (b *Bucket) ListMetadata(metadata map[string]interface{}, skip, limit int) ([]*FileInfo, error) {
 	query := r.DB(b.databaseName).Table(b.filesTable).Filter(map[string]interface{}{
 		"metadata": metadata,
 		"status":   StatusComplete,
@@ -98,7 +98,7 @@ func (b *Bucket) ListMetadata(metadata map[string]interface{}, skip, limit int) 
 		return nil, err
 	}
 
-	var files []*File
+	var files []*FileInfo
 	if err := cursor.All(&files); err != nil {
 		return nil, err
 	}
